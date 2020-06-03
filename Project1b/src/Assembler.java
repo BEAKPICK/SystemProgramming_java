@@ -347,12 +347,13 @@ public class Assembler {
 		try {
 			File file = new File(fileName);
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-			
+			int cnt = 0;
 			if(file.isFile() && file.canWrite()) {
 				for(TokenTable tokenTable: tokenList) {
 					startAddr = 0;
-					bw.write("\nH" + tokenTable.getToken(0).label+"\t"
-								+String.format("%06X", startAddr)+String.format("%06X", programSize(tokenTable)));
+					if(cnt !=0) bw.write("\n");
+					bw.write("H" + tokenTable.getToken(0).label+"\t"
+								+String.format("%06X ", startAddr)+String.format("%06X", programSize(tokenTable)));
 					
 					for(int i = 1; i < tokenTable.tokenList.size(); i++) {
 						/*정해진 위치에 존재하지 않을 수 있기 때문에 for문에서 계속 검색하는 수밖에 없다. 이를 위해 추가적인 변수를 할당하기 싫다.*/
@@ -361,9 +362,9 @@ public class Assembler {
 							bw.write("\nD");
 							for(int t = 0; t < tokenTable.getToken(i).operand.length; t++) {
 								if(tokenTable.getToken(i).operand[t]!=null) {
-									bw.write(tokenTable.getToken(i).operand[t]);
+									bw.write(tokenTable.getToken(i).operand[t]+" ");
 									/*여기서는 무조건 존재해야하며 존재하지 않는다면 에러가 있는 것이 맞다.*/
-									bw.write(String.format("%06X", tokenTable.symTab.search(tokenTable.getToken(i).operand[t])));
+									bw.write(String.format("%06X ", tokenTable.symTab.search(tokenTable.getToken(i).operand[t])));
 								}
 							}
 						}
@@ -372,7 +373,7 @@ public class Assembler {
 							bw.write("\nR");
 							for(int t = 0; t < tokenTable.getToken(i).operand.length; t++) {
 								if(tokenTable.getToken(i).operand[t]!=null) {
-									bw.write(tokenTable.getToken(i).operand[t]);
+									bw.write(tokenTable.getToken(i).operand[t]+" ");
 								}
 							}
 						}
@@ -385,21 +386,21 @@ public class Assembler {
 								tLength+=tokenTable.getToken(i).byteSize;
 								if(tLength> 28 || tokenTable.getToken(i).byteSize == 0) {
 									if(tokenTable.getToken(i).objectCode!=null)
-										tLine += tokenTable.getToken(i).objectCode;
-									bw.write(String.format("%06X", startAddr));
-									bw.write(String.format("%02X", tLength));
+										tLine += tokenTable.getToken(i).objectCode + " ";
+									bw.write(String.format("%06X ", startAddr));
+									bw.write(String.format("%02X ", tLength));
 									bw.write(tLine);
 									startAddr += tLength;
 									tLength = 0;
 									break;
 								}
-								else tLine += tokenTable.getToken(i).objectCode;
+								else tLine += tokenTable.getToken(i).objectCode + " ";
 								i++;
 							}
 							/*남아있는 코드가 있다면 출력*/
 							if(tLength!=0) {
-								bw.write(String.format("%06X", startAddr));
-								bw.write(String.format("%02X", tLength));
+								bw.write(String.format("%06X ", startAddr));
+								bw.write(String.format("%02X ", tLength));
 								bw.write(tLine);
 								startAddr += tLength;
 							}
@@ -408,11 +409,13 @@ public class Assembler {
 					}
 					/*이제 외부참조 테이블을 출력해주자*/
 					for(ExtRef extRef : tokenTable.extRefTab.extRefList) {
-						bw.write("\nM"+extRef.pointAddr+String.format("%02X", extRef.size)+extRef.operator+extRef.label);
+						bw.write("\nM"+extRef.pointAddr+String.format(" %02X", extRef.size)+extRef.operator+extRef.label);
 					}
 					bw.write("\nE");
 					if(sectionCount==0) bw.write(String.format("%06X", programStartAddr));
 					sectionCount++;
+					
+					cnt+=1;
 				}
 			}
 			bw.close();
